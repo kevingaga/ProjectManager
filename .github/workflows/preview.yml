@@ -37,7 +37,6 @@ jobs:
         run: |
           vercel pull --yes \
             --token=${{ secrets.VERCEL_TOKEN }} \
-            --scope=${{ secrets.VERCEL_ORG_ID }} \
             --environment=preview
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -48,7 +47,6 @@ jobs:
         run: |
           DEPLOY_URL=$(vercel deploy --prebuilt \
             --token=${{ secrets.VERCEL_TOKEN }} \
-            --scope=${{ secrets.VERCEL_ORG_ID }} \
             --yes \
             2>/dev/null | tail -1)
           echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
