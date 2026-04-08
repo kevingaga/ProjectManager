@@ -1,16 +1,72 @@
-# React + Vite
+# ProjectManager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Hub de gestion des projets — deploy preview mobile-first via Claude + Vercel + GitHub Actions.
 
-Currently, two official plugins are available:
+## Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```
+kevingaga/ProjectManager   ← ce repo (hub, templates, registry)
+kevingaga/clash-game       ← jeu Clash — mécaniques de map
+kevingaga/...              ← futurs projets
+```
 
-## React Compiler
+Chaque projet est un repo indépendant avec React+Vite, le même workflow de preview, et ses propres secrets Vercel.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Workflow quotidien
 
-## Expanding the ESLint configuration
+```
+Claude modifie le code dans un projet
+              ↓
+cd mon-projet && make preview MSG="feat: ..."
+              ↓
+        ~2 min
+              ↓
+URL Vercel dans la PR → test sur mobile
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Commandes
+
+### Dans n'importe quel projet
+
+```bash
+# Nouvelle branche preview + push (usage principal)
+make preview MSG="feat: ajout fonctionnalité"
+
+# Push rapide sur la branche courante
+make preview-branch MSG="fix: correction bug"
+
+# Nettoyer les vieilles branches preview/*
+make clean-previews
+```
+
+### Dans ProjectManager (hub)
+
+```bash
+# Bootstrapper un nouveau projet complet
+make new-project NAME=mon-app
+# → crée repo GitHub + clone + React+Vite + workflow + secrets Vercel
+```
+
+## Projets actifs
+
+Voir [projects.json](projects.json) pour la liste complète.
+
+| Projet | Repo | Description |
+|--------|------|-------------|
+| clash-game | [kevingaga/clash-game](https://github.com/kevingaga/clash-game) | Jeu Clash — mécaniques de map modulable |
+
+## Prérequis
+
+- Node.js 20+
+- Git
+- `make` — [GnuWin32](https://gnuwin32.sourceforge.net/packages/make.htm) (Windows)
+- `gh` CLI — `winget install GitHub.cli`
+- `vercel` CLI — `npm i -g vercel`
+
+## Setup d'un nouveau projet
+
+Voir [SETUP.md](SETUP.md) pour le guide complet.
+
+```bash
+make new-project NAME=mon-app
+```

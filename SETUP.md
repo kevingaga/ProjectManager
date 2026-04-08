@@ -1,92 +1,126 @@
-# Setup preview deploy — React (Vite) + Vercel + GitHub Actions
+# Setup — Nouveau projet
 
-## 1. Copier les fichiers dans votre projet
+## Méthode rapide (recommandée)
 
-```
-votre-projet/
-├── .github/
-│   └── workflows/
-│       └── preview.yml   ← copier ici
-└── Makefile              ← copier à la racine
-```
-
-## 2. Récupérer vos IDs Vercel
-
-### VERCEL_TOKEN
-→ https://vercel.com/account/tokens
-→ "Create Token" → donner un nom → copier la valeur
-
-### VERCEL_ORG_ID + VERCEL_PROJECT_ID (méthode fiable)
-
-Plutôt que de chercher les IDs manuellement, utiliser `vercel link` :
+Depuis le dossier `ProjectManager` :
 
 ```bash
+make new-project NAME=mon-app
+```
+
+Le script fait tout automatiquement :
+1. Crée le repo GitHub `kevingaga/mon-app`
+2. Clone en local dans `C:\Users\Gwen\Documents\Work\mon-app`
+3. Scaffold React + Vite
+4. Copie `Makefile` + `.github/workflows/preview.yml`
+5. npm install + commit initial + push
+6. Lie le projet à Vercel (`vercel link`)
+7. Configure les 3 secrets GitHub automatiquement
+8. Enregistre le projet dans `projects.json`
+
+### Prérequis avant la première fois
+
+```bash
+# 1. GitHub CLI
+winget install GitHub.cli
+gh auth login   # → GitHub.com → HTTPS → Login with a web browser
+
+# 2. Vercel CLI
 npm i -g vercel
-vercel link   # se connecter + sélectionner le projet existant
+
+# 3. Fichier .env à la racine de ProjectManager
+# (copier .env.example → .env et remplir les valeurs)
+VERCEL_TOKEN=ton_token      # vercel.com/account/tokens
+VERCEL_ORG_ID=ton_org_id   # voir ci-dessous
+```
+
+### Trouver VERCEL_TOKEN et VERCEL_ORG_ID
+
+**VERCEL_TOKEN**
+→ vercel.com/account/tokens → "Create Token"
+
+**VERCEL_ORG_ID** (méthode fiable via `vercel link`)
+```bash
+vercel link   # dans n'importe quel projet déjà lié
+cat .vercel/project.json
+# → orgId = VERCEL_ORG_ID
+```
+
+> `.vercel/` et `.env` sont gitignorés — ne jamais les committer.
+
+---
+
+## Méthode manuelle (si besoin)
+
+### 1. Structure à créer
+
+```
+mon-projet/
+├── .github/
+│   └── workflows/
+│       └── preview.yml
+├── .gitignore          ← inclure .claude/ et .vercel
+└── Makefile
+```
+
+Copier `preview.yml` et `Makefile` depuis ce repo.
+
+### 2. Secrets GitHub
+
+Dans le repo GitHub du projet :
+→ Settings → Secrets and variables → Actions → "New repository secret"
+
+| Secret | Valeur |
+|--------|--------|
+| `VERCEL_TOKEN` | token Vercel |
+| `VERCEL_ORG_ID` | orgId depuis `.vercel/project.json` |
+| `VERCEL_PROJECT_ID` | projectId depuis `.vercel/project.json` |
+
+Obtenir les IDs :
+```bash
+cd mon-projet
+vercel link   # sélectionner le projet Vercel
 cat .vercel/project.json
 ```
 
-Le fichier retourne exactement :
-```json
-{
-  "projectId": "prj_xxxx",   ← VERCEL_PROJECT_ID
-  "orgId":     "xxxx"        ← VERCEL_ORG_ID
-}
-```
+### 3. Désactiver la protection Vercel (accès mobile)
 
-> `.vercel/` est gitignore — ne jamais committer ce fichier.
+→ vercel.com → projet → Settings → Deployment Protection
+→ "Vercel Authentication" → **Disabled**
 
-## 3. Ajouter les secrets GitHub
+---
 
-Dans votre repo GitHub :
-→ Settings → Secrets and variables → Actions → "New repository secret"
-
-Ajouter les 3 secrets :
-- `VERCEL_TOKEN`    = valeur copiée à l'étape 2
-- `VERCEL_ORG_ID`  = valeur copiée à l'étape 2
-- `VERCEL_PROJECT_ID` = valeur copiée à l'étape 2
-
-## 4. Vérifier votre vite.config.js
-
-Assurez-vous que votre build output est bien `dist/` :
-```js
-// vite.config.js
-export default {
-  build: {
-    outDir: 'dist'   // doit correspondre à ce que Vercel attend
-  }
-}
-```
-
-## 5. Utilisation au quotidien
+## Utilisation au quotidien
 
 ```bash
-# Déployer depuis le PC (crée une branche + push automatiquement)
-make preview MSG="feat: nouvelle page home"
+# Déployer (nouvelle branche + PR automatique)
+make preview MSG="feat: nouvelle fonctionnalité"
 
 # Push rapide sur la branche courante
-make preview-branch MSG="fix: correction bouton"
+make preview-branch MSG="fix: correction"
 
-# Nettoyer les vieilles branches preview
+# Nettoyer les vieilles branches preview/*
 make clean-previews
 ```
 
-## Ce qui se passe ensuite
+### Ce qui se passe après un push
 
 1. GitHub Actions se déclenche (~30 sec)
 2. `npm ci` + `npm run build` (~1-2 min)
-3. Deploy sur Vercel (~30 sec)
-4. Un commentaire apparaît sur la PR avec l'URL
-5. Vous ouvrez le lien depuis votre mobile
+3. Deploy Vercel preview (~30 sec)
+4. Commentaire sur la PR avec l'URL
+5. Ouvrir le lien depuis le mobile
 
-## Workflow complet avec Claude
+---
 
+## Make non reconnu sur Windows
+
+```powershell
+# Installer make
+winget install GnuWin32.Make
+
+# Ajouter au PATH (dans PowerShell)
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files (x86)\GnuWin32\bin", "User")
 ```
-Claude génère le code
-       ↓
-Vous copiez dans votre projet local
-       ↓
-make preview MSG="feat: ce que claude a fait"
-       ↓
-2 min plus tard → lien dans la PR → test mobile
-```
+
+Relancer le terminal, puis utiliser **Git Bash** pour lancer les commandes `make`.
