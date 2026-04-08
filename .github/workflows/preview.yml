@@ -1,0 +1,101 @@
+name: Preview Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches-ignore:
+      - main
+      - master
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Link project (pull Vercel config)
+        run: |
+          vercel pull --yes \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --scope=${{ secrets.VERCEL_ORG_ID }} \
+            --environment=preview
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy to Vercel (preview)
+        id: deploy
+        run: |
+          DEPLOY_URL=$(vercel deploy --prebuilt \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --scope=${{ secrets.VERCEL_ORG_ID }} \
+            --yes \
+            2>/dev/null | tail -1)
+          echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.url }}';
+            const sha = context.payload.pull_request.head.sha.slice(0, 7);
+            const body = [
+              '## Preview déployée',
+              '',
+              `**URL :** ${url}`,
+              `**Commit :** \`${sha}\``,
+              `**Branch :** \`${context.payload.pull_request.head.ref}\``,
+              '',
+              '_Mise à jour automatique à chaque push sur cette PR._'
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('Preview déployée')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
