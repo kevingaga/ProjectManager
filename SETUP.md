@@ -16,13 +16,25 @@ votre-projet/
 → https://vercel.com/account/tokens
 → "Create Token" → donner un nom → copier la valeur
 
-### VERCEL_ORG_ID
-→ https://vercel.com/account (ou team settings)
-→ Settings → General → "Team ID" (commence par `team_`) OU votre username
+### VERCEL_ORG_ID + VERCEL_PROJECT_ID (méthode fiable)
 
-### VERCEL_PROJECT_ID
-→ Ouvrir votre projet Vercel → Settings → General
-→ "Project ID" (commence par `prj_`)
+Plutôt que de chercher les IDs manuellement, utiliser `vercel link` :
+
+```bash
+npm i -g vercel
+vercel link   # se connecter + sélectionner le projet existant
+cat .vercel/project.json
+```
+
+Le fichier retourne exactement :
+```json
+{
+  "projectId": "prj_xxxx",   ← VERCEL_PROJECT_ID
+  "orgId":     "xxxx"        ← VERCEL_ORG_ID
+}
+```
+
+> `.vercel/` est gitignore — ne jamais committer ce fichier.
 
 ## 3. Ajouter les secrets GitHub
 

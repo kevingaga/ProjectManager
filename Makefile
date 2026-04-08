@@ -14,7 +14,7 @@ preview:
 	@echo "→ Création de la branche $(BRANCH)"
 	git checkout -b $(BRANCH) 2>/dev/null || git checkout $(BRANCH)
 	git add -A
-	git commit -m $(MSG) --allow-empty
+	git commit -m "$(MSG)" --allow-empty
 	git push -u origin $(BRANCH)
 	@echo ""
 	@echo "✓ Push effectué. La preview sera disponible dans ~2 min."
@@ -23,8 +23,8 @@ preview:
 ## Push sur une branche existante
 preview-branch:
 	git add -A
-	git commit -m $(MSG) --allow-empty
-	git push
+	git commit -m "$(MSG)" --allow-empty
+	git push -u origin $(shell git branch --show-current)
 	@echo "✓ Push effectué sur $(shell git branch --show-current)"
 
 ## Voir les derniers déploiements Vercel
