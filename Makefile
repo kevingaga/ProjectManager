@@ -24,7 +24,7 @@ preview:
 preview-branch:
 	git add -A
 	git commit -m "$(MSG)" --allow-empty
-	git push
+	git push -u origin $(shell git branch --show-current)
 	@echo "✓ Push effectué sur $(shell git branch --show-current)"
 
 ## Voir les derniers déploiements Vercel
