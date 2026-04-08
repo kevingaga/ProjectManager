@@ -4,8 +4,10 @@ set -e
 NAME="${1:?Usage: make new-project NAME=my-app}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT_DIR_WIN="$(cygpath -w "$ROOT_DIR")"
 WORK_DIR="C:/Users/Gwen/Documents/Work"
 PROJECT_DIR="$WORK_DIR/$NAME"
+PROJECT_DIR_WIN="$(cygpath -w "$PROJECT_DIR" 2>/dev/null || echo "$PROJECT_DIR")"
 
 # ── Load .env ──────────────────────────────────────────────
 if [ -f "$ROOT_DIR/.env" ]; then
@@ -99,13 +101,13 @@ echo "  ✓ Secrets configurés"
 # ── Register in projects.json ──────────────────────────────
 node -e "
 const fs = require('fs');
-const p = '$ROOT_DIR/projects.json';
+const p = '$ROOT_DIR_WIN\\\\projects.json';
 const data = JSON.parse(fs.readFileSync(p, 'utf8'));
 if (!data.projects.find(x => x.name === '$NAME')) {
   data.projects.push({
     name: '$NAME',
     repo: 'kevingaga/$NAME',
-    path: '$PROJECT_DIR',
+    path: '$PROJECT_DIR_WIN',
     description: ''
   });
   fs.writeFileSync(p, JSON.stringify(data, null, 2) + '\n');
