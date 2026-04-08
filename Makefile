@@ -1,13 +1,18 @@
 # ─────────────────────────────────────────────
 #  Dispatch — preview deploy workflow
 #  Usage : make preview MSG="description"
-#          make preview-branch BRANCH=ma-feature MSG="description"
+#          make preview-branch MSG="description"
+#          make new-project NAME=my-app
 # ─────────────────────────────────────────────
+
+-include .env
+export
 
 BRANCH ?= preview/$(shell date +%Y%m%d-%H%M%S)
 MSG    ?= "chore: preview deploy"
+NAME   ?=
 
-.PHONY: preview preview-branch status clean-previews
+.PHONY: preview preview-branch status clean-previews new-project
 
 ## Crée une branche preview et push (déclenche le déploiement)
 preview:
@@ -30,6 +35,10 @@ preview-branch:
 ## Voir les derniers déploiements Vercel
 status:
 	@vercel ls --token=$(VERCEL_TOKEN) 2>/dev/null || echo "Installe vercel CLI : npm i -g vercel"
+
+## Bootstrap un nouveau projet (repo GitHub + Vite + workflow + secrets Vercel)
+new-project:
+	@bash scripts/new-project.sh $(NAME)
 
 ## Supprimer les branches preview/* locales et distantes
 clean-previews:
